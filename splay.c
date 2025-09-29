@@ -35,7 +35,7 @@ struct Node* splay(struct Node* root, int key){
     if(root -> key > key){
        if(root -> left == NULL){
           return root;
-        }
+       }
        if(root -> left -> key > key){
           root -> left -> left = splay(root -> left -> left, key);
           root = rightRotate(root);
