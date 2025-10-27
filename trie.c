@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define ALPHA 26  
+#define ALPHA 26 
 
 struct Trie {
     struct Trie *child[ALPHA];
@@ -21,8 +21,9 @@ struct Trie* newNode() {
 void insert(struct Trie *root, char *word) {
     struct Trie *cur = root;
     for (int i = 0; word[i]; i++) {
-        if (!isalpha(word[i])) continue;
         int idx = tolower(word[i]) - 'a';
+        if (idx < 0 || idx >= ALPHA)
+            continue; 
         if (cur->child[idx] == NULL)
             cur->child[idx] = newNode();
         cur = cur->child[idx];
@@ -33,8 +34,9 @@ void insert(struct Trie *root, char *word) {
 int search(struct Trie *root, char *word) {
     struct Trie *cur = root;
     for (int i = 0; word[i]; i++) {
-        if (!isalpha(word[i])) continue;
         int idx = tolower(word[i]) - 'a';
+        if (idx < 0 || idx >= ALPHA)
+            return 0;  
         if (cur->child[idx] == NULL)
             return 0;
         cur = cur->child[idx];
@@ -42,7 +44,7 @@ int search(struct Trie *root, char *word) {
     return cur->end;
 }
 
-void suggestHelper(struct Trie *root, char *prefix, char word[], int level) {
+void suggestHelper(struct Trie *root, char *word, int level) {
     if (root->end) {
         word[level] = '\0';
         printf("%s\n", word);
@@ -50,7 +52,7 @@ void suggestHelper(struct Trie *root, char *prefix, char word[], int level) {
     for (int i = 0; i < ALPHA; i++) {
         if (root->child[i]) {
             word[level] = i + 'a';
-            suggestHelper(root->child[i], prefix, word, level + 1);
+            suggestHelper(root->child[i], word, level + 1);
         }
     }
 }
@@ -59,7 +61,7 @@ void autoSuggest(struct Trie *root, char *prefix) {
     struct Trie *cur = root;
     for (int i = 0; prefix[i]; i++) {
         int idx = tolower(prefix[i]) - 'a';
-        if (cur->child[idx] == NULL) {
+        if (idx < 0 || idx >= ALPHA || cur->child[idx] == NULL) {
             printf("No suggestions found for '%s'\n", prefix);
             return;
         }
@@ -68,7 +70,7 @@ void autoSuggest(struct Trie *root, char *prefix) {
 
     char word[100];
     strcpy(word, prefix);
-    suggestHelper(cur, prefix, word, strlen(prefix));
+    suggestHelper(cur, word, strlen(prefix));
 }
 
 void loadDictionary(struct Trie *root) {
@@ -92,7 +94,6 @@ void loadDictionary(struct Trie *root) {
 
 int main() {
     struct Trie *root = newNode();
-
     loadDictionary(root);
 
     int choice;
@@ -101,12 +102,14 @@ int main() {
     while (1) {
         printf("\n1. Search a word\n2. Auto-suggest words\n3. Exit\nEnter choice: ");
         scanf("%d", &choice);
-        getchar();  
 
         switch (choice) {
         case 1:
             printf("Enter word to search: ");
             scanf("%s", word);
+            for (int i = 0; word[i]; i++)
+                word[i] = tolower(word[i]);  
+
             if (search(root, word))
                 printf("'%s' found in dictionary.\n", word);
             else
@@ -116,16 +119,19 @@ int main() {
         case 2:
             printf("Enter prefix: ");
             scanf("%s", prefix);
+            for (int i = 0; prefix[i]; i++)
+                prefix[i] = tolower(prefix[i]); 
+
             printf("Suggestions for '%s':\n", prefix);
             autoSuggest(root, prefix);
             break;
 
         case 3:
-            printf("exit\n");
+            printf("Exiting program.\n");
             return 0;
 
         default:
-            printf("Invalid choice.\n");
+            printf("Invalid choice. Try again.\n");
         }
     }
 
