@@ -3,11 +3,10 @@
 #define MAX_LEVEL 6
 #define P 0.5
 
-typedef struct node{
-	int key; 
-	struct node** forward;
-}node;
-
+typedef struct node {
+    int key; 
+    struct node** forward;
+} node;
 
 typedef struct skiplist {
     int level;
@@ -21,7 +20,7 @@ node* create_node(int level, int key) {
     for (int i = 0; i <= level; i++) {
         nn->forward[i] = NULL;
     }
-    return  nn;
+    return nn;
 }
 
 skiplist* create_skiplist() {
@@ -31,9 +30,7 @@ skiplist* create_skiplist() {
     return list;
 }
 
-
 int random_level() {
-
     int level = 0;
     while (((double)rand() / RAND_MAX) < P && level < MAX_LEVEL) {
         level++;
@@ -41,21 +38,19 @@ int random_level() {
     return level;
 }
 
-
 void insert(skiplist *list, int key) {
     node *update[MAX_LEVEL + 1];
     node *x = list->header;
 
-   
     for (int i = list->level; i >= 0; i--) {
         while (x->forward[i] != NULL && x->forward[i]->key < key) {
             x = x->forward[i];
         }
         update[i] = x;
     }
+
     x = x->forward[0];
 
-    
     if (x == NULL || x->key != key) {
         int lvl = random_level();
         if (lvl > list->level) {
@@ -64,11 +59,45 @@ void insert(skiplist *list, int key) {
             }
             list->level = lvl;
         }
+
         x = create_node(lvl, key);
         for (int i = 0; i <= lvl; i++) {
             x->forward[i] = update[i]->forward[i];
             update[i]->forward[i] = x;
         }
+    }
+}
+
+void delete(skiplist *list, int key) {
+    node *update[MAX_LEVEL + 1];
+    node *x = list->header;
+
+    for (int i = list->level; i >= 0; i--) {
+        while (x->forward[i] != NULL && x->forward[i]->key < key) {
+            x = x->forward[i];
+        }
+        update[i] = x;
+    }
+
+    x = x->forward[0];
+
+    if (x != NULL && x->key == key) {
+        for (int i = 0; i <= list->level; i++) {
+            if (update[i]->forward[i] != x)
+                break;
+            update[i]->forward[i] = x->forward[i];
+        }
+
+        free(x->forward);
+        free(x);
+
+        while (list->level > 0 && list->header->forward[list->level] == NULL) {
+            list->level--;
+        }
+
+        printf("Deleted key %d\n", key);
+    } else {
+        printf("Key %d not found, cannot delete.\n", key);
     }
 }
 
@@ -94,11 +123,10 @@ node* search(skiplist *list, int key) {
         }
     }
     x = x->forward[0];
-    if (x != NULL && x->key == key) {
+    if (x != NULL && x->key == key)
         return x;
-    } else {
+    else
         return NULL;
-    }
 }
 
 int main() {
@@ -119,10 +147,16 @@ int main() {
 
     int x = 19;
     node *found = search(list, x);
-    if (found != NULL) {
+    if (found != NULL)
         printf("Found key %d\n", x);
-    } else {
+    else
         printf("Key %d not found\n", x);
-    }
+
+    delete(list, 19);
+    delete(list, 7);
+    delete(list, 50); 
+
+    print(list);
+
     return 0;
 }
